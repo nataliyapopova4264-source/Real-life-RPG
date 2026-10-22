@@ -1,4 +1,4 @@
-name: Build REAL LIFE RPG Android v0.4.1
+name: Build REAL LIFE RPG Android v0.4.4
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - 'REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip'
-      - 'rpg-v0.4.1.html'
+      - 'rpg-v0.4.4.html'
       - '.github/workflows/build-android.yml'
 
 permissions:
@@ -38,34 +38,36 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           root=Path('REAL_LIFE_RPG_Android_0.2.1_Standard_Project')
-          html=Path('rpg-v0.4.1.html').read_text(encoding='utf-8')
-          assert 'REAL LIFE RPG v0.4.1' in html
+          html=Path('rpg-v0.4.4.html').read_text(encoding='utf-8')
+          assert 'REAL LIFE RPG v0.4.4' in html
           (root/'app/src/main/assets/index.html').write_text(html,encoding='utf-8')
           build=root/'app/build.gradle'
           data=build.read_text()
           assert "applicationId 'com.realliferpg.app'" in data
           assert "versionCode 3" in data
           assert "versionName '0.2.1'" in data
-          data=data.replace("applicationId 'com.realliferpg.app'","applicationId 'com.realliferpg.app.v041'")
-          data=data.replace("versionCode 3","versionCode 6")
-          data=data.replace("versionName '0.2.1'","versionName '0.4.1'")
+          data=data.replace("applicationId 'com.realliferpg.app'","applicationId 'com.realliferpg.app.v044'")
+          data=data.replace("versionCode 3","versionCode 9")
+          data=data.replace("versionName '0.2.1'","versionName '0.4.4'")
           build.write_text(data)
           values=root/'app/src/main/res/values/strings.xml'
           data=values.read_text()
-          data=data.replace('<string name="app_name">REAL LIFE RPG</string>','<string name="app_name">REAL LIFE RPG 0.4.1</string>')
+          data=data.replace('<string name="app_name">REAL LIFE RPG</string>','<string name="app_name">REAL LIFE RPG 0.4.4</string>')
           values.write_text(data)
           PY
       - name: Check bundled version
         shell: bash
         run: |
-          grep -q 'REAL LIFE RPG v0.4.1' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/index.html
-          grep -q 'com.realliferpg.app.v041' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/build.gradle
+          grep -q 'REAL LIFE RPG v0.4.4' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/index.html
+          grep -q 'com.realliferpg.app.v044' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/build.gradle
           grep -q 'EVOLUTION_ART' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/index.html
+          grep -q 'random-avatar' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/index.html
+          grep -q 'data-preset' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/index.html
       - name: Build debug APK
         working-directory: REAL_LIFE_RPG_Android_0.2.1_Standard_Project
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: REAL_LIFE_RPG_v0.4.1_APK
+          name: REAL_LIFE_RPG_v0.4.4_APK
           path: REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
