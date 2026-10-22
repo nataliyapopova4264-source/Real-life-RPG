@@ -1,4 +1,4 @@
-name: Build REAL LIFE RPG Android v0.3.0
+name: Build REAL LIFE RPG Android v0.4.0
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - 'REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip'
-      - 'goals-v0.3.js'
+      - 'rpg-v0.4.0.html'
       - '.github/workflows/build-android.yml'
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Install Android SDK platform
+      - name: Install Android SDK
         shell: bash
         run: |
           SDKMANAGER="$(command -v sdkmanager || true)"
@@ -30,37 +30,41 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Unpack project and inject v0.3 features
+      - name: Prepare Android project
+        shell: bash
         run: |
+          set -euo pipefail
           unzip -q REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip
-          cp goals-v0.3.js REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/goals-v0.3.js
           python3 - <<'PY'
           from pathlib import Path
           root=Path('REAL_LIFE_RPG_Android_0.2.1_Standard_Project')
-          index=root/'app/src/main/assets/index.html'
-          html=index.read_text(encoding='utf-8')
-          assert '</body>' in html and '<script src="goals-v0.3.js">' not in html
-          index.write_text(html.replace('</body>','<script src="goals-v0.3.js"></script></body>'),encoding='utf-8')
+          html=Path('rpg-v0.4.0.html').read_text(encoding='utf-8')
+          assert 'REAL LIFE RPG v0.4.0' in html
+          (root/'app/src/main/assets/index.html').write_text(html,encoding='utf-8')
           build=root/'app/build.gradle'
-          content=build.read_text()
-          assert "applicationId 'com.realliferpg.app'" in content
-          content=content.replace("applicationId 'com.realliferpg.app'","applicationId 'com.realliferpg.app.next'")
-          content=content.replace("versionCode 3","versionCode 4").replace("versionName '0.2.1'","versionName '0.3.0'")
-          build.write_text(content)
+          data=build.read_text()
+          assert "applicationId 'com.realliferpg.app'" in data
+          assert "versionCode 3" in data
+          assert "versionName '0.2.1'" in data
+          data=data.replace("applicationId 'com.realliferpg.app'","applicationId 'com.realliferpg.app.v04'")
+          data=data.replace("versionCode 3","versionCode 5")
+          data=data.replace("versionName '0.2.1'","versionName '0.4.0'")
+          build.write_text(data)
           values=root/'app/src/main/res/values/strings.xml'
-          text=values.read_text()
-          text=text.replace('<string name="app_name">REAL LIFE RPG</string>','<string name="app_name">REAL LIFE RPG 0.3</string>')
-          values.write_text(text)
+          data=values.read_text()
+          data=data.replace('<string name="app_name">REAL LIFE RPG</string>','<string name="app_name">REAL LIFE RPG 0.4</string>')
+          values.write_text(data)
           PY
-      - name: Check bundled JavaScript
+      - name: Check bundled version
+        shell: bash
         run: |
-          node --check goals-v0.3.js
-          test -f REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/goals-v0.3.js
-      - name: Build signed debug APK
+          grep -q 'REAL LIFE RPG v0.4.0' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/src/main/assets/index.html
+          grep -q 'com.realliferpg.app.v04' REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/build.gradle
+      - name: Build debug APK
         working-directory: REAL_LIFE_RPG_Android_0.2.1_Standard_Project
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: REAL_LIFE_RPG_v0.3.0_APK
+          name: REAL_LIFE_RPG_v0.4.0_APK
           path: REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
