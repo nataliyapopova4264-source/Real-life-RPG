@@ -1,0 +1,39 @@
+name: Build REAL LIFE RPG Android v0.2.1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip'
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android platform
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Unpack project
+        run: |
+          test -f REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip
+          unzip -q REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip
+      - name: Build signed debug APK
+        working-directory: REAL_LIFE_RPG_Android_0.2.1_Standard_Project
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: REAL_LIFE_RPG_v0.2.1_APK
+          path: REAL_LIFE_RPG_Android_0.2.1_Standard_Project/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
