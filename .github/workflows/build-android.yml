@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'REAL_LIFE_RPG_Android_0.2.1_Standard_Project.zip'
+      - '.github/workflows/build-android.yml'
 
 permissions:
   contents: read
@@ -19,9 +20,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android platform
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Install Android SDK platform using runner SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMANAGER" ]; then SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"; fi
+          "$SDKMANAGER" --version
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
